@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achievement Cleanup Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #222;
+            color: #eee;
+        }
+        h1 {
+            color: #00ff84;
+        }
+        button {
+            background-color: #00ff84;
+            color: #222;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #00cc66;
+        }
+        #result {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .success {
+            color: #00ff84;
+        }
+        .error {
+            color: #ff5555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Achievement Duplicate Cleanup Tool</h1>
+    <p>This tool will scan your achievement activities and remove any duplicates.</p>
+    
+    <button id="cleanupBtn">Clean Up Duplicates</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('cleanupBtn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Cleaning up duplicate achievements...</p>';
+            
+            try {
+                // Get the token from localStorage
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    resultDiv.innerHTML = '<p class="error">Error: You must be logged in to use this tool.</p>';
+                    return;
+                }
+                
+                // Call the cleanup endpoint
+                const response = await fetch('/api/activity/cleanup-duplicates', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">${data.message}</p>
+                        <h3>Cleanup Report:</h3>
+                        <p>Total activities: ${data.report.totalActivities}</p>
+                        <p>Unique achievements: ${data.report.uniqueAchievements}</p>
+                        <p>Duplicates removed: ${data.report.duplicatesRemoved}</p>
+                        <h3>Details:</h3>
+                        <ul>
+                            ${data.report.details.map(detail => `
+                                <li>${detail.title}: Removed ${detail.duplicatesRemoved} duplicate(s)</li>
+                            `).join('')}
+                        </ul>
+                        <p>Please refresh your profile page to see the changes.</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+                }
+            } catch (error) {
+                console.error('Error cleaning up duplicates:', error);
+                resultDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html> 

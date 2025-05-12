@@ -50,6 +50,26 @@ exports.createWorkout = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
+        // Check if user already has 12 workouts created today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const workoutsToday = await Workout.countDocuments({
+            userEmail: user.email,
+            createdAt: {
+                $gte: today,
+                $lt: tomorrow
+            }
+        });
+
+        if (workoutsToday >= 12) {
+            return res.status(400).json({ 
+                error: "You have reached the maximum limit of 12 workouts per day. Please try again tomorrow." 
+            });
+        }
+
         const workoutData = {
             ...req.body,
             userEmail: user.email

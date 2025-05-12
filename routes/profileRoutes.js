@@ -169,6 +169,9 @@ router.delete('/delete-profile', authMiddleware, async (req, res) => {
         user.profilePicture = "";
         await user.save();
 
+        // Update profile picture in all activities and comments
+        await updateUserProfileInfo(req.user.userId, { profilePicture: "" });
+
         res.json({ message: "Profile picture removed", profilePicture: "" });
     } catch (error) {
         res.status(500).json({ error: error.message });

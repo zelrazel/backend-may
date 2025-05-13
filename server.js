@@ -18,8 +18,9 @@ const { initScheduledTasks } = require('./utils/scheduledTasks');
 const app = express();
 
 // CORS configuration
+console.log('🔑 Setting CORS origin:', process.env.FRONTEND_URL);
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

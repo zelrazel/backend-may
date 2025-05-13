@@ -74,6 +74,28 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: [0, 'Total weight lifted cannot be negative']
+  },
+  // Email verification fields
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationToken: {
+    type: String
+  },
+  verificationTokenExpires: {
+    type: Date,
+    default: function() {
+      // Set default expiry to 24 hours from now
+      return new Date(Date.now() + 24 * 60 * 60 * 1000);
+    }
+  },
+  // Password reset fields
+  resetPasswordToken: {
+    type: String
+  },
+  resetPasswordExpires: {
+    type: Date
   }
 });
 

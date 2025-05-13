@@ -212,8 +212,6 @@ router.get("/search", authMiddleware, async (req, res) => {
     }
 });
 
-
-
 router.post("/accept", authMiddleware, async (req, res) => {
     try {
         const { requestId } = req.body;
@@ -433,7 +431,10 @@ router.post("/cancel-request", authMiddleware, async (req, res) => {
 
 router.get("/list", authMiddleware, async (req, res) => {
     try {
-        const userFriend = await UserFriend.findOne({ userId: req.user.email });
+        // Use the email from query if provided, otherwise use the logged-in user's email
+        const targetEmail = req.query.email || req.user.email;
+
+        const userFriend = await UserFriend.findOne({ userId: targetEmail });
         if (!userFriend) {
             return res.json([]);
         }
@@ -471,6 +472,174 @@ router.get("/list", authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Error fetching friends:', error);
         res.status(500).json({ message: "Failed to fetch friends list" });
+    }
+});
+
+// Get mutual friends count between logged-in user and another user
+router.get("/mutual-friends-count", authMiddleware, async (req, res) => {
+    try {
+        const { email } = req.query;
+        const userEmail = req.user.email;
+        
+        console.log('\n=== Starting Mutual Friends Count Calculation ===');
+        console.log('Current user:', userEmail);
+        console.log('Target user:', email);
+        
+        if (!email) {
+            return res.status(400).json({ message: "Target email is required" });
+        }
+        if (email === userEmail) {
+            return res.status(400).json({ message: "Cannot get mutual friends with yourself" });
+        }
+
+        // Get both users' friend records
+        const userFriend = await UserFriend.findOne({ userId: userEmail });
+        const otherFriend = await UserFriend.findOne({ userId: email });
+        
+        if (!userFriend || !otherFriend) {
+            console.log('No friend records found:', {
+                userFriendExists: !!userFriend,
+                otherFriendExists: !!otherFriend
+            });
+            return res.json({ count: 0 });
+        }
+
+        // Get accepted friends for both users
+        const userAcceptedFriends = userFriend.friends
+            .filter(f => f.status === 'accepted')
+            .map(f => f.friendId);
+        
+        const otherAcceptedFriends = otherFriend.friends
+            .filter(f => f.status === 'accepted')
+            .map(f => f.friendId);
+
+        console.log('\nUser accepted friends:', userAcceptedFriends);
+        console.log('Other user accepted friends:', otherAcceptedFriends);
+
+        // Find mutual friends by checking intersection
+        const mutualFriends = userAcceptedFriends.filter(friendId => 
+            otherAcceptedFriends.includes(friendId)
+        );
+
+        // Verify each mutual friend exists in both lists
+        console.log('\nVerifying mutual friends:');
+        mutualFriends.forEach(friendId => {
+            console.log(`Friend ${friendId}:`, {
+                inUserFriends: userAcceptedFriends.includes(friendId),
+                inOtherFriends: otherAcceptedFriends.includes(friendId)
+            });
+        });
+
+        // Double check the friendship status for each mutual friend
+        const verifiedMutualFriends = await Promise.all(
+            mutualFriends.map(async (friendId) => {
+                const friendUser = await User.findOne({ email: friendId });
+                if (!friendUser) {
+                    console.log(`Warning: User not found for mutual friend: ${friendId}`);
+                    return null;
+                }
+                return friendId;
+            })
+        );
+
+        const finalMutualFriends = verifiedMutualFriends.filter(Boolean);
+
+        console.log('\nFinal calculation:', {
+            initialCount: mutualFriends.length,
+            verifiedCount: finalMutualFriends.length,
+            mutualFriendsList: finalMutualFriends
+        });
+
+        // Return the count of verified mutual friends
+        res.json({ count: finalMutualFriends.length });
+
+    } catch (error) {
+        console.error('Error fetching mutual friends count:', error);
+        res.status(500).json({ message: "Failed to fetch mutual friends count" });
+    }
+});
+
+// Get mutual friends between logged-in user and another user
+router.get("/mutual-friends", authMiddleware, async (req, res) => {
+    try {
+        const { email } = req.query;
+        const userEmail = req.user.email;
+        
+        console.log('\n=== Starting Mutual Friends List Calculation ===');
+        console.log('Current user:', userEmail);
+        console.log('Target user:', email);
+        
+        if (!email) {
+            return res.status(400).json({ message: "Target email is required" });
+        }
+        if (email === userEmail) {
+            return res.status(400).json({ message: "Cannot get mutual friends with yourself" });
+        }
+
+        // Get both users' friend records
+        const userFriend = await UserFriend.findOne({ userId: userEmail });
+        const otherFriend = await UserFriend.findOne({ userId: email });
+        
+        if (!userFriend || !otherFriend) {
+            console.log('No friend records found:', {
+                userFriendExists: !!userFriend,
+                otherFriendExists: !!otherFriend
+            });
+            return res.json([]);
+        }
+
+        // Get accepted friends for both users
+        const userAcceptedFriends = userFriend.friends
+            .filter(f => f.status === 'accepted')
+            .map(f => f.friendId);
+        
+        const otherAcceptedFriends = otherFriend.friends
+            .filter(f => f.status === 'accepted')
+            .map(f => f.friendId);
+
+        console.log('\nUser accepted friends:', userAcceptedFriends);
+        console.log('Other user accepted friends:', otherAcceptedFriends);
+
+        // Find mutual friends by checking intersection
+        const mutualFriendEmails = userAcceptedFriends.filter(friendId => 
+            otherAcceptedFriends.includes(friendId)
+        );
+
+        // Verify each mutual friend exists in both lists
+        console.log('\nVerifying mutual friends:');
+        mutualFriendEmails.forEach(friendId => {
+            console.log(`Friend ${friendId}:`, {
+                inUserFriends: userAcceptedFriends.includes(friendId),
+                inOtherFriends: otherAcceptedFriends.includes(friendId)
+            });
+        });
+
+        // Fetch user info for each mutual friend
+        const mutualFriends = await Promise.all(
+            mutualFriendEmails.map(async (email) => {
+                const user = await User.findOne({ email })
+                    .select('firstName lastName email profilePicture course height weight gender age phoneNumber isPrivate')
+                    .lean();
+                if (!user) {
+                    console.log(`Warning: Could not find user info for mutual friend: ${email}`);
+                    return null;
+                }
+                return user;
+            })
+        );
+
+        const finalMutualFriends = mutualFriends.filter(Boolean);
+
+        console.log('\nFinal calculation:', {
+            initialCount: mutualFriendEmails.length,
+            verifiedCount: finalMutualFriends.length,
+            mutualFriendsList: finalMutualFriends.map(f => f.email)
+        });
+
+        res.json(finalMutualFriends);
+    } catch (error) {
+        console.error('Error fetching mutual friends:', error);
+        res.status(500).json({ message: "Failed to fetch mutual friends" });
     }
 });
 

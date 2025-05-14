@@ -98,9 +98,6 @@ const sendVerificationEmail = async ({
                   <p style="margin: 0; color: #006d32; font-size: 16px;">
                     If you can't find this email in your inbox, please <strong>CHECK YOUR SPAM/JUNK FOLDER</strong>.
                   </p>
-                  <p style="margin-top: 8px; color: #006d32; font-size: 15px;">
-                    To ensure you receive future emails from us, please add <strong>emeralddandelionblank@gmail.com</strong> to your contacts.
-                  </p>
                 </div>
                 
                 <hr style="border: 1px solid #e0e0e0; margin: 20px 0;">

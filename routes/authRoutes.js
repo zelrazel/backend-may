@@ -519,7 +519,7 @@ router.post('/forgot-password', async (req, res) => {
           Messages: [
             {
               From: {
-                Email: "emeralddandelionblank@gmail.com",
+                Email: "zelral1218@gmail.com",
                 Name: "TrackTechFit"
               },
               To: [

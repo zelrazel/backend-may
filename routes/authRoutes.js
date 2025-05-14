@@ -267,7 +267,6 @@ router.get('/verify-email', async (req, res) => {
               <li>The verification link has expired</li>
               <li>The verification token is incorrect</li>
             </ul>
-            <p>Please return to the sign-in page to login, or request a new verification email if needed.</p>
             <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/signin" class="btn btn-primary">Go to Sign In</a>
           </div>
         </body>

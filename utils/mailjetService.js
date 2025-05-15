@@ -63,7 +63,7 @@ const sendVerificationEmail = async ({
         Messages: [
           {
             From: {
-              Email: "zelral1218@gmail.com", // Using your new verified email as sender
+              Email: "zelblanc0712@gmail.com", // Using your new verified email as sender
               Name: "TrackTechFit"
             },
             To: [

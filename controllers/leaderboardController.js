@@ -142,6 +142,9 @@ exports.getStrengthLeaderboard = async (req, res) => {
 
             totalStrengthScore = Number(totalStrengthScore) || 0;
 
+            // Find most recent completedDate
+            const lastWorkoutDate = userWorkouts[0]?.completedDate || null;
+
             return {
                 _id: user._id,
                 firstName: user.firstName,
@@ -152,7 +155,8 @@ exports.getStrengthLeaderboard = async (req, res) => {
                 isPrivate: user.isPrivate || false,
                 strengthScore: totalStrengthScore,
                 workoutCount: userWorkouts.length,
-                totalVolume: totalStrengthScore.toFixed(2)
+                totalVolume: totalStrengthScore.toFixed(2),
+                lastWorkoutDate
             };
         });
 
@@ -226,6 +230,9 @@ exports.getConsistencyLeaderboard = async (req, res) => {
             // Total Workouts Completed + (Active Days × 10)
             const consistencyScore = userWorkouts.length + (activeDays * 10);
 
+            // Find most recent completedDate
+            const lastWorkoutDate = userWorkouts[0]?.completedDate || null;
+
             return {
                 _id: user._id,
                 firstName: user.firstName,
@@ -236,7 +243,8 @@ exports.getConsistencyLeaderboard = async (req, res) => {
                 isPrivate: user.isPrivate || false,
                 totalWorkouts: userWorkouts.length,
                 activeDays: activeDays,
-                consistencyScore: consistencyScore
+                consistencyScore: consistencyScore,
+                lastWorkoutDate
             };
         }));
 
@@ -312,6 +320,9 @@ exports.getHybridLeaderboard = async (req, res) => {
 
             const hybridScore = totalVolume + (activeDays * 10);
 
+            // Find most recent completedDate
+            const lastWorkoutDate = userWorkouts[0]?.completedDate || null;
+
             return {
                 _id: user._id,
                 firstName: user.firstName,
@@ -323,7 +334,8 @@ exports.getHybridLeaderboard = async (req, res) => {
                 totalVolume: totalVolume,
                 activeDays: activeDays,
                 hybridScore: hybridScore,
-                totalWorkouts: userWorkouts.length
+                totalWorkouts: userWorkouts.length,
+                lastWorkoutDate
             };
         }));
 

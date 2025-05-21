@@ -98,4 +98,8 @@ router.post('/cleanup-duplicates', authMiddleware, async (req, res) => {
     }
 });
 
+// The following endpoints accept optional startDate and endDate query parameters (ISO format) to filter by time period:
+//   /strength, /consistency, /hybrid
+// Example: /api/leaderboard/strength?course=BSCS&startDate=2024-06-01&endDate=2024-06-30
+
 module.exports = router;

@@ -103,6 +103,10 @@ exports.getStrengthLeaderboard = async (req, res) => {
     try {
         console.log('Starting strength leaderboard fetch...');
         const course = req.query.course || 'BSCS'; // Default to BSCS if no course is specified
+        const { startDate, endDate } = req.query;
+        let start = startDate ? new Date(startDate) : null;
+        let end = endDate ? new Date(endDate) : null;
+        if (end) { end.setHours(23,59,59,999); }
         console.log(`Filtering by course: ${course}`);
         
         // Get all users with their weights
@@ -120,8 +124,10 @@ exports.getStrengthLeaderboard = async (req, res) => {
         console.log(`Found ${completedWorkouts.length} completed workouts`);
 
         const leaderboardData = users.map(user => {
-            // Get all completed workouts for this user
-            const userWorkouts = completedWorkouts.filter(w => w.userEmail === user.email);
+            // Get all completed workouts for this user, filtered by date if provided
+            let userWorkouts = completedWorkouts.filter(w => w.userEmail === user.email);
+            if (start) userWorkouts = userWorkouts.filter(w => new Date(w.completedDate) >= start);
+            if (end) userWorkouts = userWorkouts.filter(w => new Date(w.completedDate) <= end);
             
             if (userWorkouts.length === 0) return null;
 
@@ -182,6 +188,10 @@ exports.getConsistencyLeaderboard = async (req, res) => {
     try {
         console.log('Starting consistency leaderboard fetch...');
         const course = req.query.course || 'BSCS'; // Default to BSCS if no course is specified
+        const { startDate, endDate } = req.query;
+        let start = startDate ? new Date(startDate) : null;
+        let end = endDate ? new Date(endDate) : null;
+        if (end) { end.setHours(23,59,59,999); }
         console.log(`Filtering by course: ${course}`);
         
         const users = await User.find({ course: course })
@@ -197,8 +207,10 @@ exports.getConsistencyLeaderboard = async (req, res) => {
         console.log(`Found ${completedWorkouts.length} completed workouts`);
 
         const leaderboardData = await Promise.all(users.map(async user => {
-            // Get all completed workouts for this user
-            const userWorkouts = completedWorkouts.filter(w => w.userEmail === user.email);
+            // Get all completed workouts for this user, filtered by date if provided
+            let userWorkouts = completedWorkouts.filter(w => w.userEmail === user.email);
+            if (start) userWorkouts = userWorkouts.filter(w => new Date(w.completedDate) >= start);
+            if (end) userWorkouts = userWorkouts.filter(w => new Date(w.completedDate) <= end);
             
             if (userWorkouts.length === 0) return null;
 
@@ -260,6 +272,10 @@ exports.getHybridLeaderboard = async (req, res) => {
     try {
         console.log('Starting hybrid leaderboard fetch...');
         const course = req.query.course || 'BSCS'; // Default to BSCS if no course is specified
+        const { startDate, endDate } = req.query;
+        let start = startDate ? new Date(startDate) : null;
+        let end = endDate ? new Date(endDate) : null;
+        if (end) { end.setHours(23,59,59,999); }
         console.log(`Filtering by course: ${course}`);
         
         const users = await User.find({ course: course })
@@ -275,7 +291,10 @@ exports.getHybridLeaderboard = async (req, res) => {
         console.log(`Found ${completedWorkouts.length} completed workouts`);
 
         const leaderboardData = await Promise.all(users.map(async user => {
-            const userWorkouts = completedWorkouts.filter(w => w.userEmail === user.email);
+            // Get all completed workouts for this user, filtered by date if provided
+            let userWorkouts = completedWorkouts.filter(w => w.userEmail === user.email);
+            if (start) userWorkouts = userWorkouts.filter(w => new Date(w.completedDate) >= start);
+            if (end) userWorkouts = userWorkouts.filter(w => new Date(w.completedDate) <= end);
             
             if (userWorkouts.length === 0) return null;
 

@@ -306,19 +306,28 @@ exports.getCompletedWorkouts = async (req, res) => {
         
         // Combine and deduplicate the results
         const allCompletedWorkouts = [
-            ...completedWorkouts.map(cw => ({
-                _id: cw._id,
-                workoutId: cw.workoutId,
-                name: cw.name,
-                description: cw.description,
-                category: cw.category,
-                target: cw.target,
-                exerciseName: cw.exerciseName,
-                weightLifted: cw.weightLifted,
-                sets: cw.setsCompleted,
-                reps: cw.repsCompleted,
-                completedDate: cw.completedDate,
-                isCompleted: true
+            // For each completed workout, fetch the original workout's createdAt
+            ...await Promise.all(completedWorkouts.map(async cw => {
+                let addedDate = null;
+                try {
+                    const original = await Workout.findById(cw.workoutId);
+                    if (original) addedDate = original.createdAt;
+                } catch (e) { /* ignore */ }
+                return {
+                    _id: cw._id,
+                    workoutId: cw.workoutId,
+                    name: cw.name,
+                    description: cw.description,
+                    category: cw.category,
+                    target: cw.target,
+                    exerciseName: cw.exerciseName,
+                    weightLifted: cw.weightLifted,
+                    sets: cw.setsCompleted,
+                    reps: cw.repsCompleted,
+                    completedDate: cw.completedDate,
+                    addedDate, // <-- new field
+                    isCompleted: true
+                };
             })),
             ...completedRegularWorkouts
                 .filter(w => !completedWorkouts.some(cw => cw.workoutId.toString() === w._id.toString()))
@@ -334,6 +343,7 @@ exports.getCompletedWorkouts = async (req, res) => {
                     sets: w.sets,
                     reps: w.reps,
                     completedDate: w.completedDate,
+                    addedDate: w.createdAt, // <-- new field
                     isCompleted: true
                 }))
         ];

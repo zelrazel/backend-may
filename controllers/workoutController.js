@@ -155,7 +155,11 @@ exports.deleteWorkout = async (req, res) => {
             return res.status(404).json({ error: "Workout not found or unauthorized" });
         }
 
+        // Delete the original workout
         await Workout.findByIdAndDelete(req.params.id);
+        // Also delete the completed workout entry if it exists
+        await CompletedWorkout.deleteOne({ workoutId: req.params.id, userEmail: user.email });
+
         res.status(200).json({ message: "Workout deleted successfully" });
 
     } catch (error) {
